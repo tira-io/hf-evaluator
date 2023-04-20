@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import evaluate
+from evaluate.utils.file_utils import DownloadConfig
 import pandas as pd
 
 
@@ -57,9 +58,9 @@ def evaluate_metrics(
 
     for metric in metrics:
         results.append(
-            evaluate.load(metric).compute(
-                predictions=predictions, references=references
-            )
+            evaluate.load(
+                metric, download_config=DownloadConfig(local_files_only=True)
+            ).compute(predictions=predictions, references=references)
         )
 
     return results
