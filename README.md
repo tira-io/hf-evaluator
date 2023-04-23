@@ -8,10 +8,10 @@ Measure accuracy, precision, recall and f1.
 
 ```sh
 tira-run \
-    --input-run $PWD/tira-test/csv/test-predictions \
-    --input-directory $PWD/tira-test/csv/test-references \
-    --image webis/tira-hf-evaulator:0.0.1 \
-    --command '/evaluation.py --metrics accuracy precision recall f1 --predictions $inputRun/predictions.txt --references $inputDataset/references.txt --data-format csv --output-prototext $outputDir/evaluation.prototext'
+	--input-run $PWD/tira-test/csv/test-predictions \
+	--input-directory $PWD/tira-test/csv/test-references \
+	--image webis/tira-hf-evaulator:0.0.2 \
+	--command '/evaluation.py --metrics accuracy precision recall f1 --predictions $inputRun/predictions.txt --references $inputDataset/references.txt --data-format csv --output-prototext $outputDir/evaluation.prototext'
 ```
 
 This produces outputs in `tira-output/evaluation.prototext` like:
@@ -39,10 +39,10 @@ Evaluate NER using seqeval
 
 ```sh
 tira-run \
-    --input-run $PWD/tira-test/iob/test-predictions \
-    --input-directory $PWD/tira-test/iob/test-references \
-    --image webis/tira-hf-evaulator:0.0.1 \
-    --command '/evaluation.py --metrics seqeval --predictions $inputRun/predictions.txt --references $inputDataset/references.txt --data-format IOB1 --output-prototext $outputDir/evaluation.prototext'
+	--input-run $PWD/tira-test/iob/test-predictions \
+	--input-directory $PWD/tira-test/iob/test-references \
+	--image webis/tira-hf-evaulator:0.0.2 \
+	--command '/evaluation.py --metrics seqeval --predictions $inputRun/predictions.txt --references $inputDataset/references.txt --data-format IOB1 --output-prototext $outputDir/evaluation.prototext'
 ```
 
 ## Installation + deployment

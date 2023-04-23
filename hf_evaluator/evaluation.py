@@ -8,6 +8,7 @@ import evaluate
 from evaluate.utils.file_utils import DownloadConfig
 import pandas as pd
 
+evaluate.config.HF_EVALUATE_OFFLINE = True
 
 def to_prototext(m: List[Dict[str, Any]], upper_k: str = "") -> str:
     ret = ""
