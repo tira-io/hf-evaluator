@@ -42,7 +42,7 @@ def test_csv(tmp_path: Path, csv_references: Path, csv_predictions: Path) -> Non
             raise ValueError(f"Unknown measure: {measure.key}")
 
 
-def test_iob(tmp_path: Path, iob_references: Path, iob_predictions: Path) -> None:
+def test_seqeval(tmp_path: Path, iob_references: Path, iob_predictions: Path) -> None:
     """Test IOB evaluation."""
     output_path = tmp_path / "evaluation.prototext"
     args = [
@@ -66,5 +66,37 @@ def test_iob(tmp_path: Path, iob_references: Path, iob_predictions: Path) -> Non
     for measure in measures:
         label, metric = measure.key.split(" ")
         assert label in labels
+        assert metric in metrics
+        assert float(measure.value) == 1
+
+
+def test_ner_eval(tmp_path: Path, iob_references: Path, iob_predictions: Path) -> None:
+    """Test IOB evaluation."""
+    output_path = tmp_path / "evaluation.prototext"
+    args = [
+        "--references",
+        str(iob_references),
+        "--predictions",
+        str(iob_predictions),
+        "--output-prototext",
+        str(output_path),
+        "--metrics",
+        "fschlatt/ner_eval",
+        "--data-format",
+        "IOB1",
+        "--kwargs",
+        '{"modes": ["partial", "exact"]}',
+    ]
+    main(args)
+
+    evaluation = Evaluation()
+    measures = txtf.Parse(output_path.read_text(), evaluation).measure
+    labels = ["Misc", "Per", "Overall"]
+    modes = ["Partial", "Exact"]
+    metrics = ["Precision", "Recall", "F1", "Accuracy", "Number"]
+    for measure in measures:
+        label, mode, metric = measure.key.split(" ")
+        assert label in labels
+        assert mode in modes
         assert metric in metrics
         assert float(measure.value) == 1

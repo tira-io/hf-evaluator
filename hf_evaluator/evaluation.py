@@ -3,12 +3,14 @@
 import argparse
 from pathlib import Path
 from typing import Any, Dict, List
+import json
 
 import evaluate
 from evaluate.utils.file_utils import DownloadConfig
 import pandas as pd
 
 evaluate.config.HF_EVALUATE_OFFLINE = True
+
 
 def to_prototext(m: List[Dict[str, Any]], upper_k: str = "") -> str:
     ret = ""
@@ -53,7 +55,7 @@ def load_data(path: Path, data_format: str) -> List:
 
 
 def evaluate_metrics(
-    predictions: List, references: List, metrics: List[str]
+    predictions: List, references: List, metrics: List[str], **kwargs
 ) -> List[Dict[str, Any]]:
     results = []
 
@@ -61,7 +63,7 @@ def evaluate_metrics(
         results.append(
             evaluate.load(
                 metric, download_config=DownloadConfig(local_files_only=True)
-            ).compute(predictions=predictions, references=references)
+            ).compute(predictions=predictions, references=references, **kwargs)
         )
 
     return results
@@ -80,12 +82,17 @@ def main(args=None):
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--references", type=Path, required=True)
     parser.add_argument("--output-prototext", type=Path, required=True)
+    parser.add_argument("--kwargs", type=json.loads, default=None)
 
     args = parser.parse_args(args)
 
+    kwargs = args.kwargs
+    if kwargs is None:
+        kwargs = {}
+
     predictions = load_data(args.predictions, args.data_format)
     references = load_data(args.references, args.data_format)
-    results = evaluate_metrics(predictions, references, args.metrics)
+    results = evaluate_metrics(predictions, references, args.metrics, **kwargs)
 
     with open(args.output_prototext, "w") as f:
         f.write(to_prototext(results).strip())
