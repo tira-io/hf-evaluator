@@ -2,7 +2,7 @@
 
 import argparse
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 import json
 import os
 
@@ -44,11 +44,37 @@ def to_prototext(m: List[Dict[str, Any]], upper_k: str = "") -> str:
     return ret
 
 
-def load_data(path: Path, data_format: str) -> List:
+def load_data(
+    path: Path,
+    data_format: Literal[
+        "csv",
+        "tsv",
+        "json",
+        "jsonl",
+        "IOB1",
+        "IOB2",
+        "IOE1",
+        "IOE2",
+        "IOBES",
+        "BILOU",
+    ],
+    label_column: str | int | None,
+) -> List:
+    df = None
     if data_format == "csv":
-        return pd.read_csv(path, sep=",").iloc[:, -1].tolist()
+        df = pd.read_csv(path, sep=",")
     if data_format == "tsv":
-        return pd.read_csv(path, sep="\t").iloc[:, -1].tolist()
+        df = pd.read_csv(path, sep="\t")
+    if data_format == "json":
+        df = pd.read_json(path)
+    if data_format == "jsonl":
+        df = pd.read_json(path, lines=True)
+    if df is not None:
+        if isinstance(label_column, str):
+            return df[label_column].tolist()
+        elif isinstance(label_column, int):
+            return df.iloc[:, label_column].tolist()
+        return df.iloc[:, -1].tolist()
     if data_format in ("IOB1", "IOB2", "IOE1", "IOE2", "IOBES", "BILOU"):
         data = path.read_text().strip().split("\n\n")
         data = [x.split("\n") for x in data]
@@ -83,12 +109,24 @@ def main(args=None):
     parser.add_argument(
         "--data-format",
         type=str,
-        choices=["csv", "tsv", "IOB1", "IOB2", "IOE1", "IOE2", "IOBES", "BILOU"],
+        choices=[
+            "csv",
+            "tsv",
+            "json",
+            "jsonl",
+            "IOB1",
+            "IOB2",
+            "IOE1",
+            "IOE2",
+            "IOBES",
+            "BILOU",
+        ],
         required=True,
     )
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--references", type=Path, required=True)
     parser.add_argument("--output-prototext", type=Path, required=True)
+    parser.add_argument("--label-column", type=str, default=None)
     parser.add_argument("--kwargs", type=json.loads, default=None)
 
     args = parser.parse_args(args)
@@ -97,8 +135,8 @@ def main(args=None):
     if kwargs is None:
         kwargs = {}
 
-    predictions = load_data(args.predictions, args.data_format)
-    references = load_data(args.references, args.data_format)
+    predictions = load_data(args.predictions, args.data_format, args.label_column)
+    references = load_data(args.references, args.data_format, args.label_column)
     results = evaluate_metrics(predictions, references, args.metrics, **kwargs)
 
     with open(args.output_prototext, "w") as f:

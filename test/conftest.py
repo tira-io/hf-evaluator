@@ -6,15 +6,33 @@ from pytest import TempPathFactory
 @pytest.fixture(scope="session")
 def csv_references(tmp_path_factory: TempPathFactory) -> Path:
     csv_references_path = tmp_path_factory.mktemp("data") / "csv_references"
-    csv_references_path.write_text("\n".join(["0", "0", "1", "1", "1"]))
+    csv_references_path.write_text("\n".join(["label", "0", "0", "1", "1", "1"]))
     return csv_references_path
 
 
 @pytest.fixture(scope="session")
 def csv_predictions(tmp_path_factory: TempPathFactory) -> Path:
     csv_predictions_path = tmp_path_factory.mktemp("data") / "csv_predictions"
-    csv_predictions_path.write_text("\n".join(["0", "1", "0", "0", "1"]))
+    csv_predictions_path.write_text("\n".join(["label", "0", "1", "0", "0", "1"]))
     return csv_predictions_path
+
+
+@pytest.fixture(scope="session")
+def json_references(tmp_path_factory: TempPathFactory) -> Path:
+    json_references_path = tmp_path_factory.mktemp("data") / "json_references"
+    json_references_path.write_text(
+        '[{"label": "0"}, {"label": "0"}, {"label": "1"}, {"label": "1"}, {"label": "1"}]'
+    )
+    return json_references_path
+
+
+@pytest.fixture(scope="session")
+def json_predictions(tmp_path_factory: TempPathFactory) -> Path:
+    json_predictions_path = tmp_path_factory.mktemp("data") / "json_predictions"
+    json_predictions_path.write_text(
+        '[{"label": "0"}, {"label": "1"}, {"label": "0"}, {"label": "0"}, {"label": "1"}]'
+    )
+    return json_predictions_path
 
 
 @pytest.fixture(scope="session")
