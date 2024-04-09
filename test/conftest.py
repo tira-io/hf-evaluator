@@ -39,7 +39,7 @@ def json_predictions(tmp_path_factory: TempPathFactory) -> Path:
 def iob_references(tmp_path_factory: TempPathFactory) -> Path:
     iob_references_path = tmp_path_factory.mktemp("data") / "iob_references"
     iob_references_path.write_text(
-        "\n".join(
+        "\n\n".join(
             (
                 "\n".join(["O", "O", "B-MISC", "I-MISC", "I-MISC", "I-MISC", "O"]),
                 "\n".join(["B-PER", "I-PER", "O"]),
@@ -53,7 +53,7 @@ def iob_references(tmp_path_factory: TempPathFactory) -> Path:
 def iob_predictions(tmp_path_factory: TempPathFactory) -> Path:
     iob_predictions_path = tmp_path_factory.mktemp("data") / "iob_predictions"
     iob_predictions_path.write_text(
-        "\n".join(
+        "\n\n".join(
             (
                 "\n".join(["O", "O", "B-MISC", "I-MISC", "I-MISC", "I-MISC", "O"]),
                 "\n".join(["B-PER", "I-PER", "O"]),
