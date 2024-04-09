@@ -2,7 +2,7 @@
 
 import argparse
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Tuple
 import json
 import os
 
@@ -45,6 +45,34 @@ def to_prototext(m: List[Dict[str, Any]], upper_k: str = "") -> str:
 
 
 def load_data(
+    predictions_path: Path,
+    references_path: Path,
+    data_format: Literal[
+        "csv",
+        "tsv",
+        "json",
+        "jsonl",
+        "IOB1",
+        "IOB2",
+        "IOE1",
+        "IOE2",
+        "IOBES",
+        "BILOU",
+    ],
+    index_column: str | int | None,
+    label_column: str | int | None,
+) -> Tuple[List, List]:
+    predictions = _load_data(predictions_path, data_format, index_column, label_column)
+    predictions.name = "predictions"
+    references = _load_data(references_path, data_format, index_column, label_column)
+    references.name = "references"
+    df = pd.merge(predictions, references, left_index=True, right_index=True)
+    predictions = df.iloc[:, 0].tolist()
+    references = df.iloc[:, 1].tolist()
+    return predictions, references
+
+
+def _load_data(
     path: Path,
     data_format: Literal[
         "csv",
@@ -58,8 +86,9 @@ def load_data(
         "IOBES",
         "BILOU",
     ],
+    index_column: str | int | None,
     label_column: str | int | None,
-) -> List:
+) -> pd.Series:
     df = None
     if data_format == "csv":
         df = pd.read_csv(path, sep=",")
@@ -70,15 +99,17 @@ def load_data(
     if data_format == "jsonl":
         df = pd.read_json(path, lines=True)
     if df is not None:
+        if index_column is not None:
+            df = df.set_index(index_column)
         if isinstance(label_column, str):
-            return df[label_column].tolist()
+            return df[label_column]
         elif isinstance(label_column, int):
-            return df.iloc[:, label_column].tolist()
-        return df.iloc[:, -1].tolist()
+            return df.iloc[:, label_column]
+        return df.iloc[:, -1]
     if data_format in ("IOB1", "IOB2", "IOE1", "IOE2", "IOBES", "BILOU"):
         data = path.read_text().strip().split("\n\n")
         data = [x.split("\n") for x in data]
-        return data
+        return pd.Series(data)
     else:
         raise ValueError("Unknown data format: " + data_format)
 
@@ -126,6 +157,7 @@ def main(args=None):
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--references", type=Path, required=True)
     parser.add_argument("--output-prototext", type=Path, required=True)
+    parser.add_argument("--index-column", type=str, default=None)
     parser.add_argument("--label-column", type=str, default=None)
     parser.add_argument("--kwargs", type=json.loads, default=None)
 
@@ -135,8 +167,13 @@ def main(args=None):
     if kwargs is None:
         kwargs = {}
 
-    predictions = load_data(args.predictions, args.data_format, args.label_column)
-    references = load_data(args.references, args.data_format, args.label_column)
+    predictions, references = load_data(
+        args.predictions,
+        args.references,
+        args.data_format,
+        args.index_column,
+        args.label_column,
+    )
     results = evaluate_metrics(predictions, references, args.metrics, **kwargs)
 
     with open(args.output_prototext, "w") as f:
