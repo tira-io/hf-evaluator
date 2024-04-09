@@ -58,6 +58,8 @@ def test_json(tmp_path: Path, json_references: Path, json_predictions: Path) -> 
         "f1",
         "--data-format",
         "json",
+        "--index-column",
+        "id",
         "--label-column",
         "label",
     ]

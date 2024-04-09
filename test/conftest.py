@@ -21,7 +21,8 @@ def csv_predictions(tmp_path_factory: TempPathFactory) -> Path:
 def json_references(tmp_path_factory: TempPathFactory) -> Path:
     json_references_path = tmp_path_factory.mktemp("data") / "json_references"
     json_references_path.write_text(
-        '[{"label": "0"}, {"label": "0"}, {"label": "1"}, {"label": "1"}, {"label": "1"}]'
+        '[{"id": 1, "label": "0"}, {"id": 2, "label": "0"}, {"id": 3, "label": "1"}, '
+        '{"id": 4, "label": "1"}, {"id": 5, "label": "1"}]'
     )
     return json_references_path
 
@@ -30,7 +31,8 @@ def json_references(tmp_path_factory: TempPathFactory) -> Path:
 def json_predictions(tmp_path_factory: TempPathFactory) -> Path:
     json_predictions_path = tmp_path_factory.mktemp("data") / "json_predictions"
     json_predictions_path.write_text(
-        '[{"label": "0"}, {"label": "1"}, {"label": "0"}, {"label": "0"}, {"label": "1"}]'
+        '[{"id": 1, "label": "0"}, {"id": 2, "label": "1"}, {"id": 3, "label": "0"}, '
+        '{"id": 4, "label": "0"}, {"id": 5, "label": "1"}]'
     )
     return json_predictions_path
 
