@@ -101,10 +101,8 @@ def _load_data(
     if df is not None:
         if index_column is not None:
             df = df.set_index(index_column)
-        if isinstance(label_column, str):
+        if label_column is not None:
             return df[label_column]
-        elif isinstance(label_column, int):
-            return df.iloc[:, label_column]
         return df.iloc[:, -1]
     if data_format in ("IOB1", "IOB2", "IOE1", "IOE2", "IOBES", "BILOU"):
         data = path.read_text().strip().split("\n\n")
