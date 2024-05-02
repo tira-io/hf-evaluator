@@ -59,8 +59,8 @@ def load_data(
         "IOBES",
         "BILOU",
     ],
-    index_column: str | int | None,
-    label_column: str | int | None,
+    index_column: str | None,
+    label_column: str | None,
 ) -> Tuple[List, List]:
     predictions = _load_data(predictions_path, data_format, index_column, label_column)
     predictions.name = "predictions"
@@ -86,8 +86,8 @@ def _load_data(
         "IOBES",
         "BILOU",
     ],
-    index_column: str | int | None,
-    label_column: str | int | None,
+    index_column: str | None,
+    label_column: str | None,
 ) -> pd.Series:
     df = None
     if data_format == "csv":
@@ -99,17 +99,37 @@ def _load_data(
     if data_format == "jsonl":
         df = pd.read_json(path, lines=True)
     if df is not None:
-        if index_column is not None:
-            df = df.set_index(index_column)
-        if label_column is not None:
-            return df[label_column]
-        return df.iloc[:, -1]
+        return _clean_data(df, index_column, label_column)
     if data_format in ("IOB1", "IOB2", "IOE1", "IOE2", "IOBES", "BILOU"):
         data = path.read_text().strip().split("\n\n")
         data = [x.split("\n") for x in data]
         return pd.Series(data)
     else:
         raise ValueError("Unknown data format: " + data_format)
+
+
+def _clean_data(
+    df: pd.DataFrame, index_column: str | None, label_column: str | None
+) -> pd.Series:
+    if index_column is not None:
+        if index_column not in df.columns:
+            raise ValueError(
+                f"Index column '{index_column}' not found in data. "
+                f"Available columns: {df.columns}"
+            )
+        df = df.set_index(index_column)
+    if label_column is not None:
+        if label_column not in df.columns:
+            raise ValueError(
+                f"Label column '{label_column}' not found in data. "
+                f"Available columns: {df.columns}"
+            )
+        ser = df[label_column]
+    else:
+        ser = df.iloc[:, -1]
+    if ser.dtype == "object":
+        ser = ser.astype("category").cat.codes
+    return ser
 
 
 def evaluate_metrics(
