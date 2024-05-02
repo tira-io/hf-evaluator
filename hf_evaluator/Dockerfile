@@ -1,4 +1,4 @@
-# docker build -t webis/tira-hf-evaulator:0.0.4 .
+# docker build -t webis/tira-hf-evaulator:0.0.5 .
 FROM python:3.10
 
 RUN pip3 install evaluate scikit-learn seqeval
