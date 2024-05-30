@@ -61,10 +61,15 @@ def load_data(
     ],
     index_column: str | None,
     label_column: str | None,
+    map_labels_to_ids: bool = False,
 ) -> Tuple[List, List]:
-    predictions = _load_data(predictions_path, data_format, index_column, label_column)
+    predictions = _load_data(
+        predictions_path, data_format, index_column, label_column, map_labels_to_ids
+    )
     predictions.name = "predictions"
-    references = _load_data(references_path, data_format, index_column, label_column)
+    references = _load_data(
+        references_path, data_format, index_column, label_column, map_labels_to_ids
+    )
     references.name = "references"
     df = pd.merge(predictions, references, left_index=True, right_index=True)
     predictions = df.iloc[:, 0].tolist()
@@ -88,6 +93,7 @@ def _load_data(
     ],
     index_column: str | None,
     label_column: str | None,
+    map_labels_to_ids: bool = False,
 ) -> pd.Series:
     df = None
     if data_format == "csv":
@@ -99,7 +105,7 @@ def _load_data(
     if data_format == "jsonl":
         df = pd.read_json(path, lines=True)
     if df is not None:
-        return _clean_data(df, index_column, label_column)
+        return _clean_data(df, index_column, label_column, map_labels_to_ids)
     if data_format in ("IOB1", "IOB2", "IOE1", "IOE2", "IOBES", "BILOU"):
         data = path.read_text().strip().split("\n\n")
         data = [x.split("\n") for x in data]
@@ -109,7 +115,10 @@ def _load_data(
 
 
 def _clean_data(
-    df: pd.DataFrame, index_column: str | None, label_column: str | None
+    df: pd.DataFrame,
+    index_column: str | None,
+    label_column: str | None,
+    map_labels_to_ids: bool,
 ) -> pd.Series:
     if index_column is not None:
         if index_column not in df.columns:
@@ -127,7 +136,7 @@ def _clean_data(
         ser = df[label_column]
     else:
         ser = df.iloc[:, -1]
-    if ser.dtype == "object":
+    if ser.dtype == "object" and map_labels_to_ids:
         ser = ser.astype("category").cat.codes
     return ser
 
@@ -178,6 +187,7 @@ def main(args=None):
     parser.add_argument("--index-column", type=str, default=None)
     parser.add_argument("--label-column", type=str, default=None)
     parser.add_argument("--kwargs", type=json.loads, default=None)
+    parser.add_argument("--map-labels-to-ids", action="store_true")
 
     args = parser.parse_args(args)
 
@@ -191,6 +201,7 @@ def main(args=None):
         args.data_format,
         args.index_column,
         args.label_column,
+        args.map_labels_to_ids,
     )
     results = evaluate_metrics(predictions, references, args.metrics, **kwargs)
 
